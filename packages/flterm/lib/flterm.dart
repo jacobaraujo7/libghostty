@@ -9,6 +9,9 @@ export 'package:libghostty/libghostty.dart'
     show
         ClipboardContent,
         ClipboardLocation,
+        ClipboardReadReply,
+        ClipboardReadRequest,
+        ClipboardReadResult,
         ClipboardWrite,
         ClipboardWriteCallback,
         ClipboardWriteResult,
@@ -18,12 +21,15 @@ export 'package:libghostty/libghostty.dart'
         Formatter,
         FormatterExtra,
         FormatterFormat,
+        GridRef,
         Key,
         Mods,
         MouseTracking,
         PointTag,
         Position,
         Scrollbar,
+        SearchScroll,
+        Selection,
         SelectionGestureBehavior,
         SelectionGestureBehaviors,
         TerminalMode,
@@ -33,11 +39,14 @@ export 'package:libghostty/libghostty.dart'
         UnderlineStyle,
         initializeForWeb;
 
-export 'src/foundation/callbacks.dart' show OnResize;
+export 'src/controller/terminal_controller.dart'
+    show OnResize, RestorationState, TerminalController;
+export 'src/controller/terminal_search_controller.dart'
+    show TerminalSearchController;
 export 'src/foundation/cell_range.dart' show CellRange;
 export 'src/foundation/color_palette.dart' show ColorPalette;
 export 'src/foundation/dynamic_color.dart' show DynamicColor;
-export 'src/foundation/input_types.dart' show KeyboardState, MouseAutoHide;
+export 'src/foundation/input_types.dart' show MouseAutoHide;
 export 'src/foundation/terminal_config.dart'
     show ScrollToBottom, TerminalConfig;
 export 'src/foundation/terminal_gesture_settings.dart'
@@ -51,6 +60,7 @@ export 'src/foundation/terminal_theme.dart'
         CursorTheme,
         HyperlinkStyle,
         HyperlinkTheme,
+        SearchTheme,
         SelectionTheme,
         TerminalTheme;
 export 'src/links/activation_modifier.dart' show ActivationModifier;
@@ -62,8 +72,7 @@ export 'src/links/link_settings.dart'
         LinkSettings,
         LinkType,
         LinkedFile;
-export 'src/widgets/terminal_controller.dart' show TerminalController;
-export 'src/widgets/terminal_scope.dart' show TerminalScope;
-export 'src/widgets/terminal_scroll_controller.dart'
-    show TerminalScrollController, TerminalScrollPosition;
-export 'src/widgets/terminal_view.dart' show TerminalView;
+export 'src/view/terminal_scope.dart' show TerminalScope;
+export 'src/view/terminal_scroll_controller.dart' show TerminalScrollController;
+export 'src/view/terminal_view.dart'
+    show TerminalOverlayBuilder, TerminalView, TerminalViewGeometry;
