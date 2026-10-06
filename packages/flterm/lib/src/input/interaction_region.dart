@@ -52,11 +52,16 @@ final class InteractionRegion extends StatefulWidget {
   final ValueChanged<int> onViewportRowChanged;
   final ValueChanged<ScrollInput> onScrollInput;
   final ValueChanged<ActivatedLink>? onLinkActivate;
+  final void Function(ActivatedLink link, Offset globalPosition)? onActivateAt;
+  final void Function(ActivatedLink link, Offset globalPosition)?
+  onSecondaryActivate;
   final ValueListenable<TerminalInteractionState> interaction;
 
   const InteractionRegion({
     super.key,
     this.onLinkActivate,
+    this.onActivateAt,
+    this.onSecondaryActivate,
     required this.child,
     required this.links,
     required this.metrics,
@@ -410,7 +415,13 @@ final class _InteractionRegionState extends State<InteractionRegion> {
         localPosition: details.localPosition,
         metrics: widget.metrics,
       );
-      if (link != null) widget.onLinkActivate?.call(link);
+      if (link != null) {
+        if (widget.onActivateAt != null) {
+          widget.onActivateAt!(link, details.globalPosition);
+        } else {
+          widget.onLinkActivate?.call(link);
+        }
+      }
       _terminalOwnsInteraction = false;
       return;
     }
@@ -443,6 +454,21 @@ final class _InteractionRegionState extends State<InteractionRegion> {
 
   void _handleTrackedDown(PointerDownEvent event) {
     if (_activePointers.containsKey(event.pointer)) return;
+    // Right-click on a detected link reports it (for a context menu) instead
+    // of forwarding the press. Checked before mouse-tracking so it also works
+    // in full-screen apps; only claims the event when a link is actually hit.
+    if (event.kind == .mouse &&
+        event.buttons == kSecondaryMouseButton &&
+        widget.onSecondaryActivate != null) {
+      final link = widget.links.linkAt(
+        localPosition: event.localPosition,
+        metrics: widget.metrics,
+      );
+      if (link != null) {
+        widget.onSecondaryActivate!(link, event.position);
+        return;
+      }
+    }
     // A modified click on a link opens the link even when the application
     // tracks the mouse; the tap handler then claims it as a link press.
     final tracked = _isMouseTracked() && !_linkClaimsPress(event);
