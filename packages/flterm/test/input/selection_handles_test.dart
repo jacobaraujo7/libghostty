@@ -348,6 +348,10 @@ void main() {
           expect(subject.selection.scrollbar.offset, greaterThan(before));
           await drag.end();
           await tester.pump(const Duration(milliseconds: 250));
+          // The scrollback added above makes the idle compression step report
+          // pending work and re-arm its continuation timer; dispose stops the
+          // scheduler so no timer outlives the test.
+          subject.dispose();
         },
       );
 
@@ -370,6 +374,9 @@ void main() {
           expect(subject.selection.scrollbar.offset, lessThan(before));
           await drag.end();
           await tester.pump(const Duration(milliseconds: 250));
+          // See the sibling test: stop the scheduler so its pending-compression
+          // continuation timer does not outlive the test.
+          subject.dispose();
         },
       );
 

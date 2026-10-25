@@ -1219,7 +1219,7 @@ void main() {
       },
     );
 
-    testWidgets('text input geometry tracks terminal cursor cell', (
+    testWidgets('tracks the terminal cursor caret while composing', (
       tester,
     ) async {
       final calls = recordTextInputCalls();
@@ -1234,16 +1234,38 @@ void main() {
       final renderBox = tester.renderObject<TerminalRenderBox>(
         find.byType(TerminalRenderer),
       );
-      final expected = renderBox.textInputCaretRect;
+
+      // While no composition is active the caret/composing rects are not
+      // pushed (that per-frame push is the CPU cost avoided); editable bounds
+      // still are.
       final editable = lastTextInputCall(
         calls,
         'TextInput.setEditableSizeAndTransform',
       );
-      final caret = lastTextInputCall(calls, 'TextInput.setCaretRect');
-      final composing = lastTextInputCall(calls, 'TextInput.setMarkedTextRect');
-
       expect(editable['width'], renderBox.size.width);
       expect(editable['height'], renderBox.size.height);
+      expect(
+        calls.where((call) => call.method == 'TextInput.setCaretRect'),
+        isEmpty,
+      );
+      expect(
+        calls.where((call) => call.method == 'TextInput.setMarkedTextRect'),
+        isEmpty,
+      );
+
+      // A composition resumes the caret/composing push, anchored at the cursor.
+      tester.testTextInput.updateEditingValue(
+        const TextEditingValue(
+          text: 'ni',
+          selection: TextSelection.collapsed(offset: 2),
+          composing: TextRange(start: 0, end: 2),
+        ),
+      );
+      await tester.pump();
+
+      final expected = renderBox.textInputCaretRect;
+      final caret = lastTextInputCall(calls, 'TextInput.setCaretRect');
+      final composing = lastTextInputCall(calls, 'TextInput.setMarkedTextRect');
       expect(caret['x'], expected.left);
       expect(caret['y'], expected.top);
       expect(composing['x'], expected.left);
@@ -1291,12 +1313,22 @@ void main() {
         expect(after[13], (before[13]! as num) + 34);
       });
 
-      testWidgets('follows cursor movement from backend output', (
-        tester,
-      ) async {
+      testWidgets('follows cursor movement from backend output while '
+          'composing', (tester) async {
         final calls = recordTextInputCalls();
         await tester.pumpWidget(
           wrapInApp(controller: controller, autofocus: true),
+        );
+        await tester.pump();
+
+        // The caret geometry is only pushed during a composition, so start one
+        // before moving the cursor.
+        tester.testTextInput.updateEditingValue(
+          const TextEditingValue(
+            text: 'ni',
+            selection: TextSelection.collapsed(offset: 2),
+            composing: TextRange(start: 0, end: 2),
+          ),
         );
         await tester.pump();
 

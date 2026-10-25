@@ -1182,9 +1182,22 @@ void main() {
     });
 
     group('updateGeometry', () {
-      test('reports active connection geometry', () {
+      void startComposition() {
+        handler.updateEditingValueWithDeltas(const [
+          TextEditingDeltaInsertion(
+            oldText: '',
+            textInserted: ' ',
+            insertionOffset: 0,
+            selection: TextSelection.collapsed(offset: 1),
+            composing: TextRange(start: 0, end: 1),
+          ),
+        ]);
+      }
+
+      test('reports caret and composing geometry during a composition', () {
         final calls = recordTextInputCalls();
         handler.ensureAttached();
+        startComposition();
         calls.clear();
 
         handler.updateGeometry(
@@ -1213,6 +1226,36 @@ void main() {
           'width': 24.0,
           'height': 18.0,
         });
+      });
+
+      test('skips caret and composing geometry without a composition', () {
+        final calls = recordTextInputCalls();
+        handler.ensureAttached();
+        calls.clear();
+
+        handler.updateGeometry(
+          editableSize: const Size(80, 40),
+          transform: Matrix4.identity()..translateByDouble(12.0, 24.0, 0, 1),
+          caretRect: const Rect.fromLTWH(16, 18, 8, 18),
+          composingRect: const Rect.fromLTWH(16, 18, 24, 18),
+        );
+
+        // Editable bounds still reach the platform (they change on resize or
+        // scroll), but the caret/composing rects only position the candidate
+        // and preedit UI, which is shown only during an active composition.
+        final editable = textInputCall(
+          calls,
+          'TextInput.setEditableSizeAndTransform',
+        );
+        expect(editable['width'], 80.0);
+        expect(
+          calls.where((call) => call.method == 'TextInput.setCaretRect'),
+          isEmpty,
+        );
+        expect(
+          calls.where((call) => call.method == 'TextInput.setMarkedTextRect'),
+          isEmpty,
+        );
       });
 
       test('ignores detached connection geometry', () {

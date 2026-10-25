@@ -153,7 +153,7 @@ final class CompressionScheduler {
     // frame cadence rather than in a spin, and once output goes quiet (no frame
     // scheduled) the idle task runs normally and compression proceeds.
     if (binding.hasScheduledFrame) {
-      binding.addPostFrameCallback((_) => _scheduleAtIdle(callback));
+      binding.addPostFrameCallback((_) => callback());
       return;
     }
     unawaited(
